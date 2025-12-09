@@ -63,6 +63,7 @@ Vector3 ShaderDiffuse(const VertexAttributes& atr, const UniformData& data)
 	return lighting;
 }
 
+
 void Render1()
 {
 	float tt = fmodf(TotalTime(), 3.0f);  // reset every 3s
@@ -88,12 +89,18 @@ void Render1()
 }
 
 
+Vector3 ShaderWhite(const VertexAttributes& atr, const UniformData& data)
+{
+	return { 1.0f, 1.0f, 1.0f };
+}
+
 void Render2()
 {
+	ClearColor(&gImageCPU, WHITE);
 	float tt = TotalTime();
 
 	Matrix view = LookAt({ 0, 0, 10 }, V3_ZERO, V3_UP);
-	Matrix proj = Perspective(90 * DEG2RAD, 1.0f, 0.1f, 100.0f);
+	Matrix proj = Perspective(90.0f * DEG2RAD, 1.0f, 0.1f, 100.0f);
 
 	Matrix world = RotateY(tt);
 
@@ -101,11 +108,12 @@ void Render2()
 	data.world = world;
 	data.mvp = world * view * proj;
 
-	data.lightColor = { 1, 1, 1 };
-	data.lightDirection = V3_ZERO;
-
+	data.lightColor = { 1.0f, 1.0f, 1.0f };
+	data.lightDirection = Normalize(Vector3{ -1.0f, -1.0f, -1.0f });
 	data.tex = nullptr;
 
 	DrawMesh(&gImageCPU, gMeshCube, data, ShaderDiffuse);
 }
+
+
 
