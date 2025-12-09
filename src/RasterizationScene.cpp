@@ -1,12 +1,15 @@
-#include "RasterizationScene.h"
+﻿#include "RasterizationScene.h"
 #include "Rasterization.h"
 #include "ImageUtils.h"
 #include "Window.h"
 #include "Camera.h"
 #include "Time.h"
 #include "Mesh.h"
+#include "Math.h"
+
 
 void Render1();
+void Render2();
 
 static Image fTexHead;
 
@@ -24,7 +27,8 @@ void RasterizationScene::OnUpdate(float dt)
 {
 	ClearColor(&gImageCPU, BLACK);
 	ClearDepth(&gImageCPU, 1.0f);
-	Render1();
+	//Render1();
+	Render2();
 }
 
 Vector3 ShaderPositions(const VertexAttributes& atr, const UniformData& data)
@@ -82,3 +86,26 @@ void Render1()
 
 	DrawMesh(&gImageCPU, gMeshSphere, data, ShaderTcoords);
 }
+
+
+void Render2()
+{
+	float tt = TotalTime();
+
+	Matrix view = LookAt({ 0, 0, 10 }, V3_ZERO, V3_UP);
+	Matrix proj = Perspective(90 * DEG2RAD, 1.0f, 0.1f, 100.0f);
+
+	Matrix world = RotateY(tt);
+
+	UniformData data;
+	data.world = world;
+	data.mvp = world * view * proj;
+
+	data.lightColor = { 1, 1, 1 };
+	data.lightDirection = V3_ZERO;
+
+	data.tex = nullptr;
+
+	DrawMesh(&gImageCPU, gMeshCube, data, ShaderDiffuse);
+}
+
