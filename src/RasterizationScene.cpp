@@ -11,6 +11,7 @@
 void Render1();
 void Render2();
 void Render3();
+void Render4();
 void Render5();
 static Image fTexHead;
 
@@ -30,8 +31,9 @@ void RasterizationScene::OnUpdate(float dt)
 	ClearDepth(&gImageCPU, 1.0f);
 	//Render1();
 	//Render2();
-	Render3();
-}
+	//Render3();
+	Render4();
+};
 
 Vector3 ShaderPositions(const VertexAttributes& atr, const UniformData& data)
 {
@@ -210,6 +212,76 @@ void Render3()
 	DrawMesh(&gImageCPU, gMeshHead, data, ShaderPhong);
 }
 
+Vector3 ShaderSpotlight(const VertexAttributes& atr, const UniformData& data)
+{
+	Vector3 fragPos = atr.p;
+
+	Vector3 N;
+	float lenN = sqrtf(atr.n.x * atr.n.x + atr.n.y * atr.n.y + atr.n.z * atr.n.z);
+	N.x = atr.n.x / lenN; N.y = atr.n.y / lenN; N.z = atr.n.z / lenN;
+
+	Vector3 lightPos = { 0.0f, 8.0f, 0.0f };
+	Vector3 lightDir = { 0.0f, -1.0f, 0.0f };
+	float radius = 10.0f;
+	float cutoff = cosf(45.0f * 3.14159f / 180.0f);
+
+	Vector3 L;
+	L.x = lightPos.x - fragPos.x;
+	L.y = lightPos.y - fragPos.y;
+	L.z = lightPos.z - fragPos.z;
+	float dist = sqrtf(L.x * L.x + L.y * L.y + L.z * L.z);
+	L.x /= dist; L.y /= dist; L.z /= dist;
+
+	float theta = L.x * lightDir.x + L.y * lightDir.y + L.z * lightDir.z;
+	if (theta < cutoff || dist > radius)
+		return Vector3{ 0.0f, 0.0f, 0.0f };
+
+	float diff = N.x * L.x + N.y * L.y + N.z * L.z;
+	if (diff < 0.0f) diff = 0.0f;
+
+	float ambientStrength = 0.1f;
+	float diffuseStrength = 1.0f;
+
+	Vector3 ambient = { ambientStrength, ambientStrength, ambientStrength };
+
+	Vector3 diffuse;
+	diffuse.x = diffuseStrength * diff;
+	diffuse.y = diffuseStrength * diff;
+	diffuse.z = diffuseStrength * diff;
+
+	Vector3 color;
+	color.x = ambient.x + diffuse.x;
+	color.y = ambient.y + diffuse.y;
+	color.z = ambient.z + diffuse.z;
+
+	if (color.x > 1.0f) color.x = 1.0f;
+	if (color.y > 1.0f) color.y = 1.0f;
+	if (color.z > 1.0f) color.z = 1.0f;
+
+	return color;
+}
+
+void Render4()
+{
+	ClearColor(&gImageCPU, WHITE);
+	ClearDepth(&gImageCPU, 1.0f);
+
+	float tt = TotalTime();
+
+	Matrix view = LookAt({ 0, 0, 10 }, V3_ZERO, V3_UP);
+	Matrix proj = Perspective(90.0f * DEG2RAD, 1.0f, 0.1f, 100.0f);
+
+	Matrix world = RotateY(tt);
+
+	UniformData data;
+	data.world = world;
+	data.mvp = world * view * proj;
+	data.lightDirection = { 0.0f, 8.0f, 0.0f };
+	data.tex = nullptr;
+
+	DrawMesh(&gImageCPU, gMeshHexagon, data, ShaderSpotlight);
+}
+
 
 
 void Render5()
@@ -217,11 +289,9 @@ void Render5()
 	ClearColor(&gImageCPU, WHITE);
 	float tt = TotalTime();
 
-	// Camera
 	Matrix view = LookAt({ 0, 0, 10 }, V3_ZERO, V3_UP);
 	Matrix proj = Perspective(90.0f * DEG2RAD, 1.0f, 0.1f, 100.0f);
 
-	// Cube xoay quanh trục Y
 	Matrix cubeWorld = RotateY(tt);
 	UniformData cubeData;
 	cubeData.world = cubeWorld;
@@ -231,9 +301,8 @@ void Render5()
 	cubeData.tex = nullptr;
 	DrawMesh(&gImageCPU, gMeshCube, cubeData, ShaderDiffuse);
 
-	// Sphere di chuyển theo quỹ đạo tròn trong XY-plane
 	float radius = 4.0f;
-	float angle = tt * 2.0f; // tốc độ
+	float angle = tt * 2.0f;
 	float px = radius * cosf(angle);
 	float py = radius * sinf(angle);
 	Matrix sphereWorld = Translate(px, py, 0.0f);
