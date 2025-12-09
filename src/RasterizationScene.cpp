@@ -25,15 +25,29 @@ void RasterizationScene::OnUnload()
 	DestroyImage(&fTexHead);
 }
 
+int currentRender = 1;
+
 void RasterizationScene::OnUpdate(float dt)
 {
 	ClearColor(&gImageCPU, BLACK);
 	ClearDepth(&gImageCPU, 1.0f);
-	//Render1();
-	//Render2();
-	//Render3();
-	//Render4();
-	Render5();
+
+	
+
+	if (IsKeyPressed(KEY_1)) currentRender = 1;
+	if (IsKeyPressed(KEY_2)) currentRender = 2;
+	if (IsKeyPressed(KEY_3)) currentRender = 3;
+	if (IsKeyPressed(KEY_4)) currentRender = 4;
+	if (IsKeyPressed(KEY_5)) currentRender = 5;
+
+	switch (currentRender)
+	{
+		case 1: Render1(); break;
+		case 2: Render2(); break;
+		case 3: Render3(); break;
+		case 4: Render4(); break;
+		case 5: Render5(); break;
+	}
 };
 
 Vector3 ShaderPositions(const VertexAttributes& atr, const UniformData& data)
