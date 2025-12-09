@@ -32,7 +32,8 @@ void RasterizationScene::OnUpdate(float dt)
 	//Render1();
 	//Render2();
 	//Render3();
-	Render4();
+	//Render4();
+	Render5();
 };
 
 Vector3 ShaderPositions(const VertexAttributes& atr, const UniformData& data)
@@ -282,6 +283,15 @@ void Render4()
 	DrawMesh(&gImageCPU, gMeshHexagon, data, ShaderSpotlight);
 }
 
+Vector3 ShaderRainbow(const VertexAttributes& atr, const UniformData& data)
+{
+	float t = TotalTime();
+	Vector3 color;
+	color.x = 0.5f + 0.5f * sinf(atr.p.x + t);
+	color.y = 0.5f + 0.5f * sinf(atr.p.y + t + 2.0f);
+	color.z = 0.5f + 0.5f * sinf(atr.p.z + t + 4.0f);
+	return color;
+}
 
 
 void Render5()
@@ -289,7 +299,7 @@ void Render5()
 	ClearColor(&gImageCPU, WHITE);
 	float tt = TotalTime();
 
-	Matrix view = LookAt({ 0, 0, 10 }, V3_ZERO, V3_UP);
+	Matrix view = LookAt({ 0, 0, 30 }, V3_ZERO, V3_UP);
 	Matrix proj = Perspective(90.0f * DEG2RAD, 1.0f, 0.1f, 100.0f);
 
 	Matrix cubeWorld = RotateY(tt);
@@ -299,9 +309,9 @@ void Render5()
 	cubeData.lightColor = { 1.0f, 1.0f, 1.0f };
 	cubeData.lightDirection = Normalize(Vector3{ -1.0f, -1.0f, -1.0f });
 	cubeData.tex = nullptr;
-	DrawMesh(&gImageCPU, gMeshCube, cubeData, ShaderDiffuse);
+	DrawMesh(&gImageCPU, gMeshCt4, cubeData, ShaderRainbow);
 
-	float radius = 4.0f;
+	float radius = 10.0f;
 	float angle = tt * 2.0f;
 	float px = radius * cosf(angle);
 	float py = radius * sinf(angle);
@@ -312,5 +322,18 @@ void Render5()
 	sphereData.tex = nullptr;
 	sphereData.lightColor = { 1.0f, 1.0f, 1.0f };
 	sphereData.lightDirection = Normalize(Vector3{ -1.0f, -1.0f, -1.0f });
-	DrawMesh(&gImageCPU, gMeshSphere, sphereData, ShaderTcoords);
+	DrawMesh(&gImageCPU, gMeshSphere, sphereData, ShaderPositions);
+
+	float radius2 = 5.0f;
+	float angle2 = tt * 5.0f;
+	float px2 = radius * sinf(angle);
+	float py2 = radius * cosf(angle);
+	Matrix sphereWorld2 = Translate(-1 * px,-1* py, 10.0f);
+	UniformData sphereData2;
+	sphereData2.world = sphereWorld2;
+	sphereData2.mvp = sphereWorld2 * view * proj;
+	sphereData2.tex = nullptr;
+	sphereData2.lightColor = { 1.0f, 1.0f, 1.0f };
+	sphereData2.lightDirection = Normalize(Vector3{ -1.0f, -1.0f, -1.0f });
+	DrawMesh(&gImageCPU, gMeshSphere, sphereData2, ShaderTcoords);
 }
