@@ -6,7 +6,7 @@
 #include "Time.h"
 #include "Mesh.h"
 
-void Example1();
+void Render1();
 
 static Image fTexHead;
 
