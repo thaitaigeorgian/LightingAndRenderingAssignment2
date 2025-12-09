@@ -24,7 +24,7 @@ void RasterizationScene::OnUpdate(float dt)
 {
 	ClearColor(&gImageCPU, BLACK);
 	ClearDepth(&gImageCPU, 1.0f);
-	Example1();
+	Render1();
 }
 
 Vector3 ShaderPositions(const VertexAttributes& atr, const UniformData& data)
@@ -59,33 +59,26 @@ Vector3 ShaderDiffuse(const VertexAttributes& atr, const UniformData& data)
 	return lighting;
 }
 
-void Example1()
+void Render1()
 {
-	float tt = TotalTime();
+	float tt = fmodf(TotalTime(), 3.0f);  // reset every 3s
 
-	Matrix world = RotateY(0.0f * tt * DEG2RAD) * Translate(0.0f, 0.0f, 7.0f);
-	Matrix view = LookAt({ 0.0f, 0.0f, 10.0f }, V3_ZERO, V3_UP);
-	Matrix proj = Perspective(90.0f * DEG2RAD, 1.0f, 0.1f, 100.0f);
+	float radius = 8.0f * (1.0f - tt / 3.0f);
+	float angle = tt * 6.0f;
+	float px = radius * cosf(angle);
+	float py = radius * sinf(angle);
+
+	Matrix view = LookAt({ 0, 0, 10 }, V3_ZERO, V3_UP);
+	Matrix proj = Perspective(90 * DEG2RAD, 1.0f, 0.1f, 100.0f);
+
+	Matrix world = Translate(px, py, 0.0f);
 
 	UniformData data;
 	data.world = world;
 	data.mvp = world * view * proj;
-	data.tex = &fTexHead;
-	data.lightColor = { sinf(tt) * 0.5f + 0.5f, sinf(tt + PI * 0.33f) * 0.5f + 0.5f, sinf(tt + PI * 0.66f) * 0.5f + 0.5f };
-	data.lightDirection = Normalize(V3_RIGHT + V3_UP + V3_FORWARD);
+	data.tex = nullptr;
+	data.lightColor = V3_ZERO;
+	data.lightDirection = V3_ZERO;
 
-	FragmentShader shaders[] =
-	{
-		ShaderPositions,
-		ShaderNormals,
-		ShaderTcoords,
-		ShaderTexture,
-		ShaderDiffuse
-	};
-
-	static int shader = 0;
-	if (IsKeyPressed(KEY_TAB))
-		++shader %= 5;
-
-	DrawMesh(&gImageCPU, gMeshHead, data, shaders[shader]);
+	DrawMesh(&gImageCPU, gMeshSphere, data, ShaderTcoords);
 }
